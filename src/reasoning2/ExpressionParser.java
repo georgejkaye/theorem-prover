@@ -4,11 +4,14 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * A class containing parsing methods
+ * 
  * @author George Kaye
  *
  */
@@ -17,10 +20,12 @@ public class ExpressionParser {
 
 	/**
 	 * Parse a file into a string
-	 * @param path the path of a file
+	 * 
+	 * @param path
+	 *            the path of a file
 	 * @return the string of the file's contents
 	 */
-	
+
 	public static String parseFile(String path) {
 
 		String expression = "";
@@ -46,11 +51,49 @@ public class ExpressionParser {
 	}
 
 	/**
+	 * Parses in a file in DIMACS format
+	 * 
+	 * @param path
+	 *            the path
+	 * @return the string of DIMACS input
+	 */
+
+	public static String parseDIMACS(String path) {
+		String expression = "";
+
+		try {
+
+			BufferedReader reader = new BufferedReader(new FileReader(path));
+
+			String line = null;
+
+			while (((line = reader.readLine()) != null)) {
+				if (!(line.charAt(0) == 'c') && !(line.charAt(0) == 'p')) {
+					expression += " " + line;
+				}
+			}
+
+			reader.close();
+
+		} catch (FileNotFoundException e) {
+			System.err.println("File not found!");
+			System.exit(1);
+		} catch (IOException e) {
+			System.err.println("Something bad happened");
+			System.exit(1);
+		}
+
+		return expression;
+	}
+
+	/**
 	 * Parse a logic expression from a string
-	 * @param expression the expression as a string
+	 * 
+	 * @param expression
+	 *            the expression as a string
 	 * @return the expression as a LogicExpression
 	 */
-	
+
 	public static LogicExpression parseExpression(String expression) {
 
 		LogicExpression lastExpression = null;
@@ -157,7 +200,6 @@ public class ExpressionParser {
 						lastExpression = newExpression;
 					}
 
-
 					i = literalEnd;
 
 				} else {
@@ -169,8 +211,58 @@ public class ExpressionParser {
 			}
 
 		}
-		
+
 		return lastExpression;
+	}
+
+	public static ClauseNormalForm convertDIMACS(String string) {
+
+		HashMap<Integer, LogicExpression> legend = new HashMap<>();
+
+		HashSet<HashSet<LogicExpression>> cnf = new HashSet<>();
+		HashSet<LogicExpression> clause = new HashSet<>();
+		
+		int i = 0;
+
+		while (i < string.length()) {
+
+			if (string.charAt(i) == ' ' || string.charAt(i) == '-') {
+				i++;
+			} else if (string.charAt(i) == '0') {
+				cnf.add(clause);
+				clause = new HashSet<>();
+				i++;
+			} else {
+				
+				Integer y = new Integer(Integer.parseInt(string.substring(i, i+1)));
+				
+				boolean negated = false;
+
+				try {
+					if (string.charAt(i - 1) == '-') {
+						negated = true;
+					}
+				} catch (StringIndexOutOfBoundsException e) {
+				}
+
+				if (!legend.containsKey(y)) {
+					legend.put(y, new Atom("X" + y));
+				}
+				
+				if(negated){
+					clause.add(LogicMethods.negate(legend.get(y)));
+				} else {
+					clause.add(legend.get(y));
+				}
+
+				i++;
+				
+			}
+
+		}
+
+		return new ClauseNormalForm(cnf);
+
 	}
 
 }

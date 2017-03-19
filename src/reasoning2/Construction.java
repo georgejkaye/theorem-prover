@@ -1,44 +1,54 @@
 package reasoning2;
 
+import java.util.ArrayList;
+
 /**
- * A LogicExpression combining two subexpressions and a terminal
+ * A LogicExpression combining several subexpressions all connected by the same
+ * terminal
+ * 
  * @author George Kaye
  *
  */
 
 public class Construction implements LogicExpression {
 
-	private LogicExpression left;
-	private LogicExpression right;
+	private ArrayList<LogicExpression> terms;
 	private Terminal terminal;
 	private int negations;
 
 	/**
 	 * Create a new construction with no negations
-	 * @param left the left subexpression
-	 * @param terminal the terminal
-	 * @param right the right subexpression
+	 * 
+	 * @param left
+	 *            the left subexpression
+	 * @param terminal
+	 *            the terminal
+	 * @param right
+	 *            the right subexpression
 	 */
-	
-	public Construction(LogicExpression left, Terminal terminal, LogicExpression right) {
-		this.left = left;
+
+	public Construction(ArrayList<LogicExpression> terms, Terminal terminal) {
+		this.terms = terms;
 		this.terminal = terminal;
-		this.right = right;
 		this.negations = 0;
 	}
 
 	/**
 	 * Create a new construction with a number of negations
-	 * @param left the left subexpression
-	 * @param terminal the terminal
-	 * @param right the right subexpression
-	 * @param negations the number of negations
+	 * 
+	 * @param left
+	 *            the left subexpression
+	 * @param terminal
+	 *            the terminal
+	 * @param right
+	 *            the right subexpression
+	 * @param negations
+	 *            the number of negations
 	 */
-	
-	public Construction(LogicExpression left, Terminal terminal, LogicExpression right, int negations) {
-		this.left = left;
+
+	public Construction(ArrayList<LogicExpression> terms, Terminal terminal, int negations) {
+		this.terms = terms;
 		this.terminal = terminal;
-		this.right = right;
 		this.negations = negations;
 	}
 
@@ -47,10 +57,16 @@ public class Construction implements LogicExpression {
 		String result = "";
 
 		for (int i = 0; i < negations; i++) {
-			result += "¬";
+			result += "-";
 		}
 
-		return result + "(" + left.toString() + " " + terminal.toString() + " " + right.toString() + ")";
+		result += "(" + terms.get(0);
+
+		for (int i = 1; i < terms.size(); i++) {
+			result += (" " + terminal.toString() + " " + terms.get(i).toString());
+		}
+
+		return result + ")";
 
 	}
 
@@ -60,13 +76,8 @@ public class Construction implements LogicExpression {
 	}
 
 	@Override
-	public LogicExpression getLeft() {
-		return left;
-	}
-
-	@Override
-	public LogicExpression getRight() {
-		return right;
+	public ArrayList<LogicExpression> getTerms() {
+		return terms;
 	}
 
 	@Override
@@ -77,22 +88,15 @@ public class Construction implements LogicExpression {
 	@Override
 	public int getDepth() {
 
-		int leftDepth = left.getDepth();
-		int rightDepth = right.getDepth();
+		int deepest = 0;
 
-		if (left.getType() == ExpressionType.CONSTRUCTION) {
-			if (left.getTerminal().equals(terminal)) {
-				leftDepth--;
+		for (LogicExpression term : terms) {
+			if (term.getDepth() > deepest) {
+				deepest = term.getDepth();
 			}
 		}
 
-		if (right.getType() == ExpressionType.CONSTRUCTION) {
-			if (right.getTerminal().equals(terminal)) {
-				rightDepth--;
-			}
-		}
-
-		return 1 + Math.max(leftDepth, rightDepth);
+		return 1 + deepest;
 	}
 
 	@Override
@@ -107,7 +111,7 @@ public class Construction implements LogicExpression {
 
 	@Override
 	public int hashCode() {
-		return negations + left.hashCode() + right.hashCode() + terminal.hashCode();
+		return negations + terms.hashCode() + terminal.hashCode();
 	}
 
 	@Override
@@ -118,12 +122,71 @@ public class Construction implements LogicExpression {
 			return true;
 
 		Construction exp = (Construction) obj;
-		if (exp.getNegations() == negations && exp.getLeft().equals(left) && exp.getRight().equals(right) && exp.getTerminal() == terminal){
+		if (exp.getNegations() == negations && exp.getTerms().equals(terms) && exp.getTerminal() == terminal) {
 			return true;
 		}
 
 		return false;
 
 	}
-	
+
+	@Override
+	public LogicExpression addToFront(LogicExpression term, Terminal terminal) {
+
+		int i = 0;
+		
+		ArrayList<LogicExpression> newTerms = new ArrayList<>();
+		newTerms.addAll(terms);
+
+		try {
+			if (term.getTerminal() == terminal) {
+
+				for (LogicExpression exp : term.getTerms()) {
+					newTerms.add(i, exp);
+					i++;
+				}
+			}
+
+			else {
+				newTerms.add(0, term);
+			}
+		} catch (NullPointerException e) {
+			newTerms.add(0, term);
+		}
+
+		return new Construction(newTerms, this.terminal);
+
+	}
+
+	@Override
+	public LogicExpression addToBack(LogicExpression term, Terminal terminal) {
+
+		ArrayList<LogicExpression> newTerms = new ArrayList<>();
+		newTerms.addAll(terms);
+
+		try {
+			
+			if (term.getTerminal() == terminal && term.getNegations() == 0) {
+
+				for (LogicExpression exp : term.getTerms()) {
+					newTerms.add(exp);
+				}
+			}
+
+			else {
+				newTerms.add(term);
+			}
+		} catch (NullPointerException e) {
+			newTerms.add(term);
+		}
+
+		return new Construction(newTerms, this.terminal);
+
+	}
+
+	@Override
+	public int getSize() {
+		return terms.size();
+	}
+
 }

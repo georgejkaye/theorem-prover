@@ -5,6 +5,7 @@ import reasoning2.ComplementingPair;
 
 /**
  * A class representing a clause normal form
+ * 
  * @author George Kaye
  *
  */
@@ -15,9 +16,11 @@ public class ClauseNormalForm {
 
 	/**
 	 * Create a new clause normal form
-	 * @param cnf the clause of clauses
+	 * 
+	 * @param cnf
+	 *            the clause of clauses
 	 */
-	
+
 	public ClauseNormalForm(HashSet<HashSet<LogicExpression>> cnf) {
 
 		this.cnf = cnf;
@@ -26,9 +29,10 @@ public class ClauseNormalForm {
 
 	/**
 	 * Get the actual clause normal form
+	 * 
 	 * @return the clause normal form
 	 */
-	
+
 	public HashSet<HashSet<LogicExpression>> getCNF() {
 		return this.cnf;
 	}
@@ -53,19 +57,23 @@ public class ClauseNormalForm {
 			set += ", ";
 		}
 
-		set = set.substring(0, set.length() - 2);
-		set += "}";
+		if (set.length() != 0) {
+			set = set.substring(0, set.length() - 2);
+		}
 
+		set += "}";
 		return set;
 
 	}
 
 	/**
 	 * Find an unresolved pair of atoms in this clause normal form
-	 * @param resolved the set of already resolved atoms
+	 * 
+	 * @param resolved
+	 *            the set of already resolved atoms
 	 * @return a complementing pair
 	 */
-	
+
 	public ComplementingPair findUnresolvedPair(HashSet<HashSet<LogicExpression>> resolved) {
 
 		for (HashSet<LogicExpression> clause : cnf) {
@@ -76,14 +84,15 @@ public class ClauseNormalForm {
 
 					for (HashSet<LogicExpression> clause1 : cnf) {
 
-						for (LogicExpression exp1 : clause1) {
+						if (!clause1.equals(clause)) {
+							for (LogicExpression exp1 : clause1) {
 
-							if (LogicMethods.isNegated(exp, exp1)) {
-								return new ComplementingPair(clause, clause1);
+								if (LogicMethods.isNegated(exp, exp1)) {
+									return new ComplementingPair(clause, clause1);
+								}
+
 							}
-
 						}
-
 					}
 				}
 
@@ -97,10 +106,12 @@ public class ClauseNormalForm {
 
 	/**
 	 * Finds if an expression has a complementing one in this clause normal form
-	 * @param at the expression
+	 * 
+	 * @param at
+	 *            the expression
 	 * @return whether there is a complementing expresison
 	 */
-	
+
 	public boolean hasComplement(LogicExpression at) {
 
 		int complement = 1;
@@ -122,10 +133,12 @@ public class ClauseNormalForm {
 
 	/**
 	 * Add a clause to this clause normal form
-	 * @param c the clause to add
+	 * 
+	 * @param c
+	 *            the clause to add
 	 * @return the new clause normal form
 	 */
-	
+
 	public ClauseNormalForm add(HashSet<LogicExpression> c) {
 
 		cnf.add(c);
@@ -135,7 +148,7 @@ public class ClauseNormalForm {
 	/**
 	 * Equals method
 	 */
-	
+
 	public boolean equals(Object obj) {
 		if (!(obj instanceof ClauseNormalForm))
 			return false;
@@ -148,6 +161,28 @@ public class ClauseNormalForm {
 		}
 
 		return false;
+
+	}
+
+	/**
+	 * Get all the unique atoms in this clause normal form
+	 * 
+	 * @return the set of atoms contained in this cnf
+	 */
+
+	public HashSet<LogicExpression> getAtoms() {
+
+		HashSet<LogicExpression> atoms = new HashSet<>();
+
+		for (HashSet<LogicExpression> clause : cnf) {
+			for (LogicExpression atom : clause) {
+				if (!LogicMethods.containsNegation(atom, atoms)) {
+					atoms.add(new Atom(atom.getName()));
+				}
+			}
+		}
+
+		return atoms;
 
 	}
 }

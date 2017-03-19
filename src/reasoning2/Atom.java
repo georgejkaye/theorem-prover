@@ -1,5 +1,7 @@
 package reasoning2;
 
+import java.util.ArrayList;
+
 /**
  * A logic expression comprising of just an atom and negations
  * @author George Kaye
@@ -37,7 +39,7 @@ public class Atom implements LogicExpression {
 		String result = "";
 
 		for (int i = 0; i < negations; i++) {
-			result += "¬";
+			result += "-";
 		}
 
 		return result + name;
@@ -55,14 +57,12 @@ public class Atom implements LogicExpression {
 	}
 
 	@Override
-	public LogicExpression getLeft() {
-		return null;
+	public ArrayList<LogicExpression> getTerms() {
+		ArrayList<LogicExpression> result = new ArrayList<>();
+		result.add(this);
+		return result;
 	}
 
-	@Override
-	public LogicExpression getRight() {
-		return null;
-	}
 
 	@Override
 	public int getNegations() {
@@ -98,5 +98,30 @@ public class Atom implements LogicExpression {
 
 		return false;
 
+	}
+
+	@Override
+	public LogicExpression addToFront(LogicExpression term, Terminal terminal) {
+		ArrayList<LogicExpression> terms = new ArrayList<>();
+		
+		terms.add(term);
+		terms.add(this);
+		
+		return new Construction(terms, terminal);
+	}
+	
+	@Override
+	public LogicExpression addToBack(LogicExpression term, Terminal terminal) {
+		ArrayList<LogicExpression> terms = new ArrayList<>();
+		
+		terms.add(this);
+		terms.add(term);
+		
+		return new Construction(terms, terminal);
+	}
+
+	@Override
+	public int getSize() {
+		return 1;
 	}
 }

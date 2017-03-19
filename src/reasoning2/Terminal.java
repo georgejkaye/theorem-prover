@@ -6,11 +6,11 @@ public enum Terminal {
 	public String toString() {
 		switch (this) {
 		case NOT:
-			return "¬";
+			return "-";
 		case AND:
-			return "&&";
+			return "&";
 		case OR:
-			return "||";
+			return "|";
 		case IMPLICATION:
 			return "->";
 		case EQUIVALENCE:
@@ -22,7 +22,7 @@ public enum Terminal {
 
 	public static Terminal fromString(String chars) {
 		switch (chars) {
-		case "¬":
+		case "-":
 			return NOT;
 		case "&":
 			return AND;

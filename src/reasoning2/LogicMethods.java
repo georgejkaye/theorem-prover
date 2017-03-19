@@ -2,6 +2,7 @@ package reasoning2;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -16,7 +17,7 @@ import reasoning2.LogicExpression.ExpressionType;
 
 public class LogicMethods {
 
-	public static final Atom TRUE = new Atom("T");
+	public static final Atom TRUE = new Atom("TRUE");
 	public static final Atom FALSE = new Atom("FALSE");
 
 	/**
@@ -35,7 +36,7 @@ public class LogicMethods {
 		case ATOM:
 			return new Atom(exp.getName(), negs + 1);
 		case CONSTRUCTION:
-			return new Construction(exp.getLeft(), exp.getTerminal(), exp.getRight(), negs + 1);
+			return new Construction(exp.getTerms(), exp.getTerminal(), negs + 1);
 		default:
 			return exp;
 		}
@@ -43,73 +44,31 @@ public class LogicMethods {
 	}
 
 	/**
-	 * Return the conjunction of two expressions
+	 * Return a list of expressions, with each of them negated
 	 * 
-	 * @param exp1
-	 *            the first expressions
-	 * @param exp2
-	 *            the second expression
-	 * @return the conjunction of the two expressions
+	 * @param list
+	 *            the list of expressions
+	 * @return the list of negated expressions
 	 */
 
-	public static LogicExpression conj(LogicExpression exp1, LogicExpression exp2) {
+	public static ArrayList<LogicExpression> negate(ArrayList<LogicExpression> list) {
 
-		return new Construction(exp1, Terminal.AND, exp2);
+		ArrayList<LogicExpression> negated = new ArrayList<>();
+
+		for (LogicExpression exp : list) {
+
+			negated.add(negate(exp));
+
+		}
+
+		return negated;
 
 	}
 
 	/**
-	 * Return the disjunction of two expressions
-	 * 
-	 * @param exp1
-	 *            the first expression
-	 * @param exp2
-	 *            the second expression
-	 * @return the disjunction of the two expressions
-	 */
-
-	public static LogicExpression disj(LogicExpression exp1, LogicExpression exp2) {
-
-		return new Construction(exp1, Terminal.OR, exp2);
-
-	}
-
-	/**
-	 * Return an implication between two expressions
-	 * 
-	 * @param exp1
-	 *            the first expression
-	 * @param exp2
-	 *            the second expression
-	 * @return an expression of the first expression implies the second one
-	 */
-
-	public static LogicExpression implies(LogicExpression exp1, LogicExpression exp2) {
-
-		return new Construction(exp1, Terminal.IMPLICATION, exp2);
-
-	}
-
-	/**
-	 * Return an equivalence between two expressions
-	 * 
-	 * @param exp1
-	 *            the first expression
-	 * @param exp2
-	 *            the second expression
-	 * @return an expression showing the two expressions are equivalent
-	 */
-
-	public static LogicExpression equivalent(LogicExpression exp1, LogicExpression exp2) {
-
-		return new Construction(exp1, Terminal.EQUIVALENCE, exp2);
-
-	}
-
-	/**
-	 * Combine one or two expressions with a given terminal If terminal is null
-	 * and one of the expressions is not, attempts to return the non null
-	 * expression
+	 * Combine two expressions with a given terminal. If the terminal is the
+	 * same as the one in the first expression the new expression is added to
+	 * that one, otherwise a new construction is made combining the two
 	 * 
 	 * @param exp1
 	 *            the first expression
@@ -122,18 +81,48 @@ public class LogicMethods {
 
 	public static LogicExpression combine(LogicExpression exp1, LogicExpression exp2, Terminal terminal) {
 
-		switch (terminal) {
-		case AND:
-			return conj(exp1, exp2);
-		case OR:
-			return disj(exp1, exp2);
-		case IMPLICATION:
-			return implies(exp1, exp2);
-		case EQUIVALENCE:
-			return equivalent(exp1, exp2);
-		default:
-			return null;
+		ArrayList<LogicExpression> terms = new ArrayList<>();
+
+		if (terminal.equals(Terminal.IMPLICATION) || terminal.equals(Terminal.EQUIVALENCE)) {
+
+			terms.add(exp1);
+			terms.add(exp2);
+
+		} else if (exp1.getType() == ExpressionType.ATOM && exp2.getType() == ExpressionType.ATOM) {
+
+			terms.add(exp1);
+			terms.add(exp2);
+
+		} else if (exp1.getType() == ExpressionType.ATOM) {
+
+			if (exp2.getTerminal() == terminal && exp2.getNegations() == 0) {
+				return exp2.addToFront(exp1, terminal);
+
+			} else {
+				terms.add(exp1);
+				terms.add(exp2);
+			}
+
+		} else if (exp2.getType() == ExpressionType.ATOM) {
+
+			if (exp1.getTerminal() == terminal && exp1.getNegations() == 0) {
+				return exp1.addToBack(exp2, terminal);
+
+			} else {
+				terms.add(exp1);
+				terms.add(exp2);
+			}
+
+		} else if (exp1.getTerminal() == terminal && exp1.getNegations() == 0) {
+			return exp1.addToBack(exp2, terminal);
+		} else {
+
+			terms.add(exp1);
+			terms.add(exp2);
+
 		}
+
+		return new Construction(terms, terminal);
 
 	}
 
@@ -155,7 +144,7 @@ public class LogicMethods {
 			case ATOM:
 				return new Atom(exp.getName(), negs - 2);
 			case CONSTRUCTION:
-				return new Construction(exp.getLeft(), exp.getTerminal(), exp.getRight(), negs - 2);
+				return new Construction(exp.getTerms(), exp.getTerminal(), negs - 2);
 			default:
 				return null;
 			}
@@ -164,103 +153,6 @@ public class LogicMethods {
 
 		return exp;
 
-	}
-
-	/**
-	 * Performs commutativity conjunction on an expression
-	 * 
-	 * @param exp
-	 *            the expression
-	 * @return the result
-	 */
-
-	public static LogicExpression commConj(LogicExpression exp) {
-
-		return new Construction(exp.getRight(), Terminal.AND, exp.getLeft());
-	}
-
-	/**
-	 * Performs associativity conjunction on an expression
-	 * 
-	 * @param exp
-	 *            the expression
-	 * @return the result
-	 */
-
-	public static LogicExpression assocConj(LogicExpression exp) {
-
-		return new Construction(new Construction(exp.getLeft(), Terminal.AND, exp.getRight().getLeft()), Terminal.AND,
-				exp.getRight().getRight());
-
-	}
-
-	/**
-	 * Performs distributivity conjunction on an expression
-	 * 
-	 * @param exp
-	 *            the expression
-	 * @return the result
-	 */
-
-	public static LogicExpression distConj(LogicExpression exp) {
-
-		return new Construction(new Construction(exp.getLeft(), Terminal.AND, exp.getRight().getLeft()), Terminal.OR,
-				new Construction(exp.getLeft(), Terminal.AND, exp.getRight().getRight()));
-	}
-
-	/**
-	 * Performs commutativity disjunction on an expression
-	 * 
-	 * @param exp
-	 *            the expression
-	 * @return the result
-	 */
-
-	public static LogicExpression commDisj(LogicExpression exp) {
-
-		return new Construction(exp.getRight(), Terminal.OR, exp.getLeft());
-	}
-
-	/**
-	 * Performs associativity disjunction on an expression
-	 * 
-	 * @param exp
-	 *            the expression
-	 * @return the result
-	 */
-
-	public static LogicExpression assocDisj(LogicExpression exp) {
-
-		return new Construction(new Construction(exp.getLeft(), Terminal.OR, exp.getRight().getLeft()), Terminal.OR,
-				exp.getRight().getRight());
-
-	}
-
-	/**
-	 * Performs reverse associativity disjunction on an expression
-	 * 
-	 * @param exp
-	 *            the expression
-	 * @return the result
-	 */
-
-	public static LogicExpression assocDisjRev(LogicExpression exp) {
-		return new Construction(exp.getLeft().getLeft(), Terminal.OR,
-				new Construction(exp.getLeft().getRight(), Terminal.OR, exp.getRight()));
-	}
-
-	/**
-	 * Performs distributivity disjunction on an expression
-	 * 
-	 * @param exp
-	 *            the expression
-	 * @return the result
-	 */
-
-	public static LogicExpression distDisj(LogicExpression exp) {
-
-		return new Construction(new Construction(exp.getLeft(), Terminal.OR, exp.getRight().getLeft()), Terminal.AND,
-				new Construction(exp.getLeft(), Terminal.OR, exp.getRight().getRight()));
 	}
 
 	/**
@@ -275,9 +167,9 @@ public class LogicMethods {
 
 		switch (exp.getTerminal()) {
 		case AND:
-			return new Construction(negate(exp.getLeft()), Terminal.OR, negate(exp.getRight()));
+			return new Construction(negate(exp.getTerms()), Terminal.OR);
 		case OR:
-			return new Construction(negate(exp.getLeft()), Terminal.AND, negate(exp.getRight()));
+			return new Construction(negate(exp.getTerms()), Terminal.AND);
 		default:
 			return exp;
 		}
@@ -294,7 +186,17 @@ public class LogicMethods {
 
 	public static LogicExpression implication(LogicExpression exp) {
 
-		return new Construction(negate(exp.getLeft()), Terminal.OR, exp.getRight(), exp.getNegations());
+		ArrayList<LogicExpression> terms = exp.getTerms();
+
+		LogicExpression left = terms.get(0);
+		LogicExpression right = terms.get(1);
+
+		ArrayList<LogicExpression> newTerms = new ArrayList<>();
+
+		newTerms.add(negate(left));
+		newTerms.add(right);
+
+		return new Construction(newTerms, Terminal.OR, exp.getNegations());
 
 	}
 
@@ -308,8 +210,25 @@ public class LogicMethods {
 
 	public static LogicExpression equivalence(LogicExpression exp) {
 
-		return new Construction(new Construction(exp.getLeft(), Terminal.IMPLICATION, exp.getRight()), Terminal.AND,
-				new Construction(exp.getRight(), Terminal.IMPLICATION, exp.getLeft()), exp.getNegations());
+		ArrayList<LogicExpression> terms = exp.getTerms();
+		ArrayList<LogicExpression> newTerms = new ArrayList<>();
+
+		LogicExpression left = terms.get(0);
+		LogicExpression right = terms.get(1);
+
+		ArrayList<LogicExpression> lhs = new ArrayList<>();
+		ArrayList<LogicExpression> rhs = new ArrayList<>();
+
+		lhs.add(left);
+		lhs.add(right);
+
+		rhs.add(right);
+		rhs.add(left);
+
+		newTerms.add(new Construction(lhs, Terminal.IMPLICATION));
+		newTerms.add(new Construction(rhs, Terminal.IMPLICATION));
+
+		return new Construction(newTerms, Terminal.AND, exp.getNegations());
 	}
 
 	/**
@@ -324,7 +243,8 @@ public class LogicMethods {
 
 	public static boolean isNegated(LogicExpression exp1, LogicExpression exp2) {
 
-		if (exp1.toString().equals("¬" + exp2.toString()) || exp2.toString().equals("¬" + exp1.toString())) {
+		if (exp1.toString().equals(Terminal.NOT.toString() + exp2.toString())
+				|| exp2.toString().equals(Terminal.NOT.toString() + exp1.toString())) {
 			return true;
 		}
 
@@ -332,320 +252,162 @@ public class LogicMethods {
 	}
 
 	/**
-	 * Transform an expression into Clause Normal Form
-	 * 
-	 * @param exp
-	 *            the expression
-	 * @return the expression in Clause Normal Form
-	 */
-
-	public static ClauseNormalForm transform(LogicExpression exp) {
-
-		exp = resolveArrows(exp);
-
-		if (TheoremProver.debug)
-			System.out.println("After resolving implications and equivalences: " + exp);
-
-		exp = performDeMorgans(exp);
-
-		if (TheoremProver.debug)
-			System.out.println("After performing De Morgans: " + exp);
-
-		exp = shuffleExpression(exp);
-		
-		if (TheoremProver.debug)
-			System.out.println("After performing Distributivity Disjunction: " + exp);
-
-		exp = simplifyDisj(exp);
-
-		if (TheoremProver.debug) {
-			System.out.println("After simplifying disjuntions: " + exp);
-		}
-
-		exp = simplifyConj(exp);
-
-		if (TheoremProver.debug)
-			System.out.println("After simplifying conjunctions: " + exp);
-
-		exp = simplifyFalsehoods(exp);
-
-		if (TheoremProver.debug)
-			System.out.println("After simplifying falsehoods: " + exp);
-
-		return formClauses(exp);
-
-	}
-
-	/**
-	 * Perform deMorgans on an expression recursively, also performing double
-	 * negative elimination if necessary
-	 * 
-	 * @param exp
-	 *            the expression
-	 * @return the result
-	 */
-
-	public static LogicExpression performDeMorgans(LogicExpression exp) {
-
-		while (exp.getNegations() >= 2) {
-
-			exp = dne(exp);
-
-		}
-
-		if (exp.getType() == LogicExpression.ExpressionType.ATOM) {
-			return exp;
-		}
-
-		if (exp.getNegations() == 1) {
-			exp = deMorgans(exp);
-		}
-
-		return new Construction(performDeMorgans(exp.getLeft()), exp.getTerminal(), performDeMorgans(exp.getRight()),
-				exp.getNegations());
-	}
-
-	/**
-	 * Resolve any implications and equivalences in an expression
-	 * 
-	 * @param exp
-	 *            the expression
-	 * @return the result
-	 */
-
-	public static LogicExpression resolveArrows(LogicExpression exp) {
-
-		while (exp.getNegations() >= 2) {
-
-			exp = dne(exp);
-
-		}
-
-		if (exp.getType() == LogicExpression.ExpressionType.ATOM) {
-			return exp;
-		}
-
-		if (exp.getTerminal() == Terminal.IMPLICATION) {
-			exp = implication(exp);
-		}
-
-		if (exp.getTerminal() == Terminal.EQUIVALENCE) {
-			exp = equivalence(exp);
-		}
-
-		return new Construction(resolveArrows(exp.getLeft()), exp.getTerminal(), resolveArrows(exp.getRight()),
-				exp.getNegations());
-
-	}
-
-	/**
-	 * Perform distributivity disjunction repeatedly on an expression
-	 * 
-	 * @param exp
-	 *            the expression
-	 * @return the result
-	 */
-
-	public static LogicExpression shuffleExpression(LogicExpression exp) {
-
-		System.out.println("now shuffling: " + exp);
-
-		if (exp.getDepth() == 1) {
-			return exp;
-		}
-
-		if (exp.getType() == ExpressionType.ATOM) {
-			return exp;
-		}
-
-		if (exp.getTerminal() == Terminal.OR) {
-
-			if (exp.getRight().getType() == ExpressionType.ATOM
-					&& exp.getLeft().getType() == ExpressionType.CONSTRUCTION) {
-				exp = commDisj(exp);
-				System.out.println("   flipped: " + exp);
-			}
-
-			if (exp.getDepth() != 1) {
-
-				System.out.println("   left: " + exp.getLeft());
-				System.out.println("   terminal: " + exp.getTerminal());
-				System.out.println("   right: " + exp.getRight());
-
-				LogicExpression left = shuffleExpression(exp.getLeft());
-				LogicExpression right = shuffleExpression(exp.getRight());
-
-				System.out.println("   new left: " + left);
-				System.out.println("   new right: " + right);
-
-				LogicExpression beforeDist = new Construction(left, Terminal.OR, right);
-				System.out.println("   before: " + beforeDist);
-
-				LogicExpression dist = distDisj(beforeDist);
-
-				System.out.println("   after: " + dist);
-
-				return dist;
-
-			}
-
-			return exp;
-		}
-
-		if (exp.getTerminal() == Terminal.AND) {
-			LogicExpression newCons = new Construction(shuffleExpression(exp.getLeft()), Terminal.AND,
-					shuffleExpression(exp.getRight()));
-			System.out.println("   returning: " + newCons);
-			return newCons;
-		}
-
-		return null;
-
-	}
-
-	public static boolean ensureInForm(LogicExpression exp) {
-
-		if (exp.getTerminal() == Terminal.OR) {
-			return false;
-		}
-
-		if (exp.getLeft().getType() == ExpressionType.ATOM) {
-			return ensureInForm(exp.getLeft());
-		}
-
-		if (exp.getRight().getType() == ExpressionType.ATOM) {
-			return ensureInForm(exp.getRight());
-		}
-
-		if (exp.getLeft().getDepth() == 1 && exp.getLeft().getTerminal() == Terminal.OR) {
-			if (exp.getRight().getDepth() == 1 && exp.getRight().getTerminal() == Terminal.OR) {
-				return true;
-			}
-		}
-
-		LogicExpression left = exp.getLeft();
-		LogicExpression right = exp.getRight();
-
-		return (ensureInForm(left) && ensureInForm(right));
-
-	}
-
-	/**
-	 * Simplify the disjunctions in an expression
-	 * 
-	 * @param exp
-	 *            the expression
-	 * @return the result
-	 */
-
-	public static LogicExpression simplifyDisj(LogicExpression exp) {
-
-		if (exp.getType() == ExpressionType.ATOM) {
-			return exp;
-		}
-
-		if (exp.getTerminal() == Terminal.OR) {
-
-			if (exp.getLeft().toString().equals(exp.getRight().toString())) {
-				exp = exp.getLeft();
-			} else if (exp.getLeft().toString().equals("¬" + exp.getRight().toString())
-					|| exp.getRight().toString().equals("¬" + exp.getLeft().toString())) {
-				return TRUE;
-			}
-		}
-
-		if (exp.getType() == ExpressionType.ATOM) {
-			return exp;
-		}
-
-		return combine(simplifyDisj(exp.getLeft()), simplifyDisj(exp.getRight()), exp.getTerminal());
-
-	}
-
-	/**
-	 * Simplify the conjunctions in an expression
-	 * 
-	 * @param exp
-	 *            the expression
-	 * @return the result
-	 */
-
-	public static LogicExpression simplifyConj(LogicExpression exp) {
-
-		if (exp.getType() == LogicExpression.ExpressionType.ATOM) {
-			return exp;
-		}
-
-		if (exp.getTerminal() == Terminal.AND) {
-
-			if (exp.getLeft().toString().equals("T")) {
-				exp = exp.getRight();
-			} else if (exp.getRight().toString().equals("T")) {
-				exp = exp.getLeft();
-			} else if (exp.getLeft().toString().equals(exp.getRight().toString())
-					|| exp.getRight().toString().equals(exp.getLeft().toString())) {
-				exp = exp.getLeft();
-			} else if (exp.getLeft().toString().equals("¬" + exp.getRight().toString())
-					|| exp.getRight().toString().equals("¬" + exp.getLeft().toString())) {
-				return FALSE;
-			}
-		}
-
-		return combine(simplifyConj(exp.getLeft()), simplifyConj(exp.getRight()), exp.getTerminal());
-	}
-
-	/**
-	 * Simplify the falsehoods in an expression
-	 * 
-	 * @param exp
-	 *            the expression
-	 * @return the result
-	 */
-
-	public static LogicExpression simplifyFalsehoods(LogicExpression exp) {
-
-		if (exp.getType() == ExpressionType.ATOM) {
-			return exp;
-		}
-
-		if (exp.getTerminal() == Terminal.OR) {
-
-			if (exp.getLeft().toString().equals("FALSE")) {
-				exp = exp.getRight();
-			}
-
-			if (exp.getRight().toString().equals("FALSE")) {
-				exp = exp.getLeft();
-			}
-
-		}
-
-		return combine(simplifyFalsehoods(exp.getLeft()), simplifyFalsehoods(exp.getRight()), exp.getTerminal());
-	}
-
-	/**
-	 * Forms a clause normal form from an expression in conjunction normal form
+	 * Generate a clause normal form from a logic expression
 	 * 
 	 * @param exp
 	 *            the expression
 	 * @return the clause normal form
 	 */
 
-	public static ClauseNormalForm formClauses(LogicExpression exp) {
+	public static ClauseNormalForm generateClauseNormalForm(LogicExpression exp) {
 
-		String expression = exp.toString();
-		int i = 0;
+		// transform the expression into conjunctive normal form
+		exp = transform(exp);
+
+		if (TheoremProver.debug) {
+			System.out.println("Conjunctive Normal Form: " + exp);
+		}
+
+		return findClauses(exp.toString());
+	}
+
+	/**
+	 * Transform an expression into conjunctive normal form
+	 * 
+	 * @param exp
+	 *            the expression
+	 * @return the expression in conjunctive normal form
+	 */
+
+	public static LogicExpression transform(LogicExpression exp) {
+
+		// algorithm adapted from
+		// https://www.cs.jhu.edu/~jason/tutorials/convert-to-CNF.html
+
+		// dne
+		if (exp.getNegations() % 2 == 0 && exp.getNegations() > 1) {
+			exp = dne(exp);
+		}
+
+		// single atom
+		if (exp.getType() == ExpressionType.ATOM) {
+			return exp;
+		}
+
+		// implication
+		if (exp.getTerminal() == Terminal.IMPLICATION) {
+			return transform(implication(exp));
+		}
+
+		// equivalence
+		if (exp.getTerminal() == Terminal.EQUIVALENCE) {
+			return transform(equivalence(exp));
+		}
+
+		// negations
+		if (exp.getNegations() == 1) {
+			return transform(deMorgans(exp));
+		}
+
+		// conjunction
+		if (exp.getTerminal() == Terminal.AND) {
+
+			ArrayList<LogicExpression> terms = exp.getTerms();
+			LogicExpression result = null;
+
+			// convert all subexpressions to cnf, then combine them with
+			// conjunctions
+			for (LogicExpression term : terms) {
+
+				try {
+					result = combine(result, transform(term), Terminal.AND);
+				} catch (NullPointerException e) {
+					result = transform(term);
+				}
+			}
+
+			return result;
+		}
+
+		// disjunction
+		if (exp.getTerminal() == Terminal.OR) {
+
+			ArrayList<LogicExpression> terms = exp.getTerms();
+			LogicExpression result = null;
+
+			// convert all subexpressions to cnf, then combine them with
+			// disjunctions
+			for (LogicExpression term : terms) {
+
+				try {
+					result = combine(result, transform(term), Terminal.OR);
+				} catch (NullPointerException e) {
+					result = transform(term);
+				}
+			}
+
+			ArrayList<LogicExpression> newTerms = result.getTerms();
+
+			// converting a set of conjunctions connected by disjunctions to a
+			// set of disjunctions connected by conjunctions
+			for (int i = 0; i < result.getSize() - 1; i = i++) {
+
+				ArrayList<LogicExpression> finalTerms = new ArrayList<>();
+
+				LogicExpression expa = newTerms.get(0);
+				LogicExpression expb = newTerms.get(1);
+
+				ArrayList<LogicExpression> a = expa.getTerms();
+				ArrayList<LogicExpression> b = expb.getTerms();
+
+				for (LogicExpression ai : a) {
+					for (LogicExpression bi : b) {
+
+						LogicExpression ci = combine(ai, bi, Terminal.OR);
+						finalTerms.add(ci);
+
+					}
+				}
+
+				newTerms.remove(expa);
+				newTerms.remove(expb);
+
+				LogicExpression nextResult = new Construction(finalTerms, Terminal.AND);
+
+				newTerms.add(0, nextResult);
+
+			}
+
+			return result;
+
+		}
+
+		return null;
+	}
+
+	/**
+	 * Convert a string of an expression into clause normal form
+	 * 
+	 * @param expression
+	 * @return
+	 */
+
+	public static ClauseNormalForm findClauses(String expression) {
 
 		HashSet<HashSet<LogicExpression>> cnf = new HashSet<>();
-		HashSet<LogicExpression> clause = new HashSet<>();
+		HashSet<LogicExpression> currentClause = new HashSet<>();
 
 		Pattern literals = Pattern.compile("[A-Z]+[0-9]*");
+		Pattern terminals = Pattern.compile("&|\\||->|<->");
 		Matcher matcher = null;
+
+		int i = 0;
 
 		while (i < expression.length()) {
 
 			int literalStart = expression.length();
 			int literalEnd = expression.length();
+			int terminalStart = expression.length();
 
 			try {
 				matcher = literals.matcher(expression.substring(i));
@@ -655,32 +417,47 @@ public class LogicMethods {
 			} catch (IllegalStateException e) {
 			}
 
-			if (expression.charAt(literalStart - 1) == '¬') {
-				clause.add(new Atom(expression.substring(literalStart, literalEnd), 1));
-			} else {
-				clause.add(new Atom(expression.substring(literalStart, literalEnd), 0));
+			try {
+				matcher = terminals.matcher(expression.substring(i));
+				matcher.find();
+				terminalStart = matcher.start() + i;
+			} catch (IllegalStateException e) {
 			}
 
-			i = literalEnd;
+			if (literalStart < terminalStart) {
 
-			try {
-				while ((expression.charAt(i) == ')' || expression.charAt(i) == ' ')) {
+				i = literalStart;
+				LogicExpression newTerm = new Atom(expression.substring(literalStart, literalEnd));
+
+				try {
+					if (expression.charAt(literalStart - 1) == '-') {
+						newTerm = LogicMethods.negate(newTerm);
+					}
+				} catch (StringIndexOutOfBoundsException e) {
+
+				}
+
+				currentClause.add(newTerm);
+				i = literalEnd;
+
+			} else if (literalStart > terminalStart) {
+
+				i = terminalStart;
+
+				if (expression.charAt(i) == '|') {
+					i++;
+				} else if (expression.charAt(i) == '&') {
+					cnf.add(currentClause);
+					currentClause = new HashSet<>();
 					i++;
 				}
 
-				if (expression.charAt(i) == '&') {
-					cnf.add(clause);
-					clause = new HashSet<LogicExpression>();
-				}
-
-			} catch (StringIndexOutOfBoundsException e) {
+			} else {
+				i++;
 			}
-
-			i++;
-
 		}
 
-		cnf.add(clause);
+		cnf.add(currentClause);
 
 		return new ClauseNormalForm(cnf);
 
@@ -774,66 +551,223 @@ public class LogicMethods {
 
 	public static LogicModel davisPutnam(ClauseNormalForm cnf) {
 
+		HashSet<LogicExpression> atoms = cnf.getAtoms();
+
 		LogicModel model = new LogicModel();
 
 		HashSet<HashSet<LogicExpression>> cnf1 = cnf.getCNF();
 
-		boolean empty = false;
+		// keep iterating until there are no more clauses in the clause normal
+		// form
+		while (!cnf1.isEmpty()) {
 
-		// unit propogation
-		for (HashSet<LogicExpression> clause : cnf1) {
+			// unit propogation
+			// look for clauses of size 1 and propogate
 
-			if (clause.size() == 1) {
+			while (findSmallestClause(cnf1) == 1) {
+				for (HashSet<LogicExpression> clause : cnf1) {
+
+					if (clause.size() == 1) {
+
+						for (LogicExpression exp : clause) {
+
+							boolean trueAtom = true;
+
+							if (exp.getNegations() == 1) {
+								trueAtom = false;
+							}
+							
+							model.addAtom(exp, trueAtom);
+
+							if(TheoremProver.debug){
+								System.out.println("Unit propogation: " + exp);
+							}
+							
+							cnf1 = reduceCNF(exp, cnf1);
+
+						}
+
+					}
+
+				}
+			}
+
+			if (TheoremProver.debug) {
+				System.out.println("Model after Unit Propogation: " + model);
+				System.out.println("Clause Normal Form after Unit Propogation: " + cnf1);
+			}
+
+			// pure literal
+			// search for literals that only occur in one polarity
+
+			ArrayList<LogicExpression> onePolarity = new ArrayList<>();
+			ArrayList<LogicExpression> twoPolarity = new ArrayList<>();
+
+			for (HashSet<LogicExpression> clause : cnf1) {
 
 				for (LogicExpression exp : clause) {
 
-					boolean trueAtom = true;
-
-					if (exp.getNegations() == 1) {
-						trueAtom = false;
+					if (containsNegation(exp, onePolarity)) {
+						twoPolarity.add(exp);
+						twoPolarity.add(getNegation(exp, onePolarity));
+						onePolarity.remove(getNegation(exp, onePolarity));
+					} else if (!onePolarity.contains(exp) && !twoPolarity.contains(exp)) {
+						onePolarity.add(exp);
 					}
-
-					model.addAtom(exp, trueAtom);
-
-					cnf1 = reduceCNF(exp, cnf1);
 
 				}
 
 			}
 
-		}
+			for (LogicExpression atom : onePolarity) {
 
-		// pure literal
-		ArrayList<LogicExpression> onePolarity = new ArrayList<>();
-		ArrayList<LogicExpression> twoPolarity = new ArrayList<>();
+				boolean trueAtom = true;
 
-		for (HashSet<LogicExpression> clause : cnf1) {
+				if (atom.getNegations() == 1) {
+					trueAtom = false;
+				}
 
-			for (LogicExpression exp : clause) {
+				model.addAtom(atom, trueAtom);
+				cnf1 = reduceCNF(atom, cnf1);
+				
+				if(TheoremProver.debug){
+					System.out.println("Pure literal: " + atom);
+				}
 
-				if (!onePolarity.contains(exp) && !twoPolarity.contains(exp)) {
-					onePolarity.add(exp);
-				} else if (!twoPolarity.contains(exp) && onePolarity.contains(exp)) {
+			}
 
-					for (HashSet<LogicExpression> clause1 : cnf1) {
-						for (LogicExpression exp1 : clause1) {
+			if (TheoremProver.debug) {
+				System.out.println("Model after Pure Literal: " + model);
+				System.out.println("Clause Normal Form after Pure Literal: " + cnf1);
+			}
 
-							if (isNegated(exp, exp1)) {
-								onePolarity.remove(exp);
-								twoPolarity.add(exp);
-								twoPolarity.add(exp1);
+			if (!cnf1.isEmpty()) {
+
+				// splitting
+				// choose the first unassigned atom and set it to true/false
+
+				for (LogicExpression atom : atoms) {
+
+					if (TheoremProver.debug) {
+						System.out.println("Splitting: " + atom);
+					}
+
+					HashSet<HashSet<LogicExpression>> cnfa = reduceCNF(atom, cnf1);
+					HashSet<HashSet<LogicExpression>> cnfb = reduceCNF(new Atom(atom.getName(), 1), cnf1);
+
+					// try to find a model with the atom as true
+					ClauseNormalForm reduced = new ClauseNormalForm(cnfa);
+					LogicModel left = davisPutnam(reduced);
+
+					if (left != null) {
+						model.addAtom(atom, true);
+						model.mergeModel(left);
+
+						cnf1 = reduceCNF(atom, cnf1);
+
+						for (Map.Entry<LogicExpression, Boolean> entry : left.getModel().entrySet()) {
+							int negations = 0;
+
+							if (entry.getValue().equals(new Boolean(false))) {
+								negations = 1;
 							}
+
+							cnf1 = reduceCNF(new Atom(entry.getKey().getName(), negations), cnf1);
+						}
+
+						break;
+					} else {
+
+						// if that doesn't work try to find one with the atom as
+						// false
+						reduced = new ClauseNormalForm(cnfb);
+						LogicModel right = davisPutnam(reduced);
+
+						if (right != null) {
+							model.addAtom(atom, true);
+							model.mergeModel(right);
+
+							cnf1 = reduceCNF(atom, cnf1);
+
+							for (Map.Entry<LogicExpression, Boolean> entry : right.getModel().entrySet()) {
+
+								int negations = 0;
+
+								if (entry.getValue().equals(new Boolean(false))) {
+									negations = 1;
+								}
+
+								cnf1 = reduceCNF(new Atom(entry.getKey().getName(), negations), cnf1);
+
+								break;
+							}
+
 						}
 					}
 
 				}
 
+				if (cnf1.contains(new HashSet<LogicExpression>())) {
+					return null;
+				}
+
 			}
 
 		}
 
+		if (model.getSize() < atoms.size()) {
+			for (LogicExpression atom : atoms) {
+				if (!model.contains(atom)) {
+					model.addAtom(atom, true);
+				}
+			}
+		}
+
 		return model;
 
+	}
+
+	/**
+	 * Find if an iterable contains the negation of an expression
+	 * 
+	 * @param exp
+	 *            the expression
+	 * @param list
+	 *            the list
+	 * @return whether there is a negation
+	 */
+
+	public static boolean containsNegation(LogicExpression exp, Iterable<LogicExpression> list) {
+
+		for (LogicExpression exp1 : list) {
+			if (isNegated(exp, exp1)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Return the negation of an element in an iterable (could have no
+	 * negations)
+	 * 
+	 * @param exp
+	 *            the expression
+	 * @param list
+	 *            the list
+	 * @return the negation
+	 */
+
+	public static LogicExpression getNegation(LogicExpression exp, Iterable<LogicExpression> list) {
+
+		for (LogicExpression exp1 : list) {
+			if (isNegated(exp, exp1)) {
+				return exp1;
+			}
+		}
+
+		return null;
 	}
 
 	/**
@@ -874,6 +808,32 @@ public class LogicMethods {
 		}
 
 		return newcnf;
+
+	}
+
+	/**
+	 * Find the size of the smallest clause in a clause normal form
+	 * 
+	 * @param cnf
+	 *            the clause normal form
+	 * @return the size of the smallest clause
+	 */
+
+	public static int findSmallestClause(HashSet<HashSet<LogicExpression>> cnf) {
+
+		int i = -1;
+
+		for (HashSet<LogicExpression> clause : cnf) {
+
+			int size = clause.size();
+
+			if (i == -1 || size < i) {
+				i = size;
+			}
+
+		}
+
+		return i;
 
 	}
 

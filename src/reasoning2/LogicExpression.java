@@ -1,5 +1,7 @@
 package reasoning2;
 
+import java.util.ArrayList;
+
 public interface LogicExpression {
 	
 	public enum ExpressionType{ATOM, CONSTRUCTION};
@@ -19,18 +21,11 @@ public interface LogicExpression {
 	public String getName();
 	
 	/**
-	 * Get the left expression of this construction, null if an atom
+	 * Get the terms of this construction, null if an atom
 	 * @return the left expression of this construction
 	 */
 	
-	public LogicExpression getLeft();
-
-	/**
-	 * Get the right expression of this construction, null if an atom
-	 * @return the right expression of this construction
-	 */
-	
-	public LogicExpression getRight();
+	public ArrayList<LogicExpression> getTerms();
 
 	/**
 	 * Get the terminal of this construction, null if an atom
@@ -48,10 +43,35 @@ public interface LogicExpression {
 	
 	/**
 	 * Get the depth of this expression (atoms are depth 0)
-	 * @return
+	 * @return the depth
 	 */
 	
 	public int getDepth();
+	
+	/**
+	 * Get the size of this expression (how many elements it contains)
+	 * @return the size
+	 */
+	
+	public int getSize();
+	
+	/**
+	 * Add a term to the front of the expression
+	 * @param term the term to add
+	 * @param terminal the terminal of the expression
+	 * @return the new expression
+	 */
+	
+	public LogicExpression addToFront(LogicExpression term, Terminal terminal);
+
+	/**
+	 * Add a term to the back of the expression
+	 * @param term the term to add
+	 * @param terminal the terminal of the expression
+	 * @return the new expression
+	 */
+	
+	public LogicExpression addToBack(LogicExpression term, Terminal terminal);
 	
 }
 

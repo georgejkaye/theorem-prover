@@ -38,7 +38,15 @@ public class LogicModel {
 
 		}
 
-		return result.substring(0, result.length() - 2);
+		if (model.size() != 0) {
+			return result.substring(0, result.length() - 2);
+		}
+
+		if(result.equals("")){
+			return "none";
+		}
+		
+		return result;
 	}
 
 	/**
@@ -51,7 +59,53 @@ public class LogicModel {
 	 */
 
 	public void addAtom(LogicExpression exp, boolean polarity) {
-		model.put(exp, polarity);
+		model.put(new Atom(exp.getName()), polarity);
+	}
+	
+	/**
+	 * Get the model object
+	 * @return the model object
+	 */
+	
+	public HashMap<LogicExpression, Boolean> getModel(){
+		return this.model;
+	}
+
+	/**
+	 * Get the number of elements in this model
+	 * 
+	 * @return the number of elements in this model
+	 */
+
+	public int getSize() {
+		return model.size();
+	}
+
+	/**
+	 * Merge a model into this one
+	 * @param newModel the new model
+	 */
+	
+	public void mergeModel(LogicModel newModel){
+		
+		HashMap<LogicExpression, Boolean> newMap = newModel.getModel();
+		
+		for(Map.Entry<LogicExpression, Boolean> entry : newMap.entrySet()){
+			
+			addAtom(entry.getKey(), entry.getValue());
+			
+		}
+		
+	}
+	
+	/**
+	 * Find out if this model contains an atom
+	 * @param atom the atom
+	 * @return whether it is contained in this model
+	 */
+	
+	public boolean contains(LogicExpression atom){
+		return model.containsKey(atom);
 	}
 
 }
