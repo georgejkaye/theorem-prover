@@ -37,7 +37,7 @@ public class TheoremProver {
 			}
 
 		} catch (ArrayIndexOutOfBoundsException e) {
-				wrongArguments();
+			wrongArguments();
 		}
 
 		if (!format.equals("-dimacs")) {
@@ -64,9 +64,9 @@ public class TheoremProver {
 		}
 
 		/**
-		 * Perform a resolution proof, negating the initial
-		 * expression/setlusion and attempting to find a contradiction: if the
-		 * negation is unsat the initial expression is sat
+		 * Perform a resolution proof, negating the initial expression/setlusion
+		 * and attempting to find a contradiction: if the negation is unsat the
+		 * initial expression is sat
 		 */
 
 		if (mode.equals("-res")) {
@@ -126,7 +126,7 @@ public class TheoremProver {
 	/**
 	 * Prepare an input for conversion to clause normal form
 	 */
-	
+
 	public static void prepareCNF() {
 		if (format.equals("-set")) {
 
@@ -195,7 +195,7 @@ public class TheoremProver {
 	 */
 
 	public static Result performResolution() {
-		
+
 		if (format.equals("-dimacs")) {
 			System.out.println("Cannot perform resolution with DIMACS");
 			System.exit(0);
@@ -223,8 +223,7 @@ public class TheoremProver {
 
 		ClauseNormalForm cnf = convertToCNF(parsedExpression);
 
-		if (debug)
-			System.out.println("Performing a resolution proof");
+		System.out.println("Performing a resolution proof");
 
 		Result result = resolutionProof(cnf);
 
@@ -264,7 +263,7 @@ public class TheoremProver {
 	 */
 
 	public static Result performDPLL() {
-		
+
 		if (format.equals("-exp")) {
 
 			parsedExpression = ExpressionParser.parseExpression(input, false, false);
@@ -287,8 +286,7 @@ public class TheoremProver {
 
 		}
 
-		if (debug)
-			System.out.println("Performing DPLL to find a model");
+		System.out.println("Performing DPLL to find a model");
 
 		Result result = davisPutnam(cnf);
 
@@ -326,29 +324,28 @@ public class TheoremProver {
 	 */
 
 	public static void compareMethods() {
-		
+
 		if (format.equals("-dimacs")) {
 			System.out.println("Cannot compare runtimes with DIMACS");
 			System.exit(0);
 		}
-		
+
 		if (format.equals("-exp")) {
 
 			parsedExpression = ExpressionParser.parseExpression(input, false, true);
 			parsedExpression = LogicMethods.negate(parsedExpression);
-			
+
 		} else if (format.equals("-set")) {
 
 			parsedExpression = ExpressionParser.parseExpression(input, true, true);
 		}
-		
+
 		ClauseNormalForm cnf = convertToCNF(parsedExpression);
 
 		if (debug)
 			System.out.println("Converting to clause normal form");
-		
-		if (debug)
-			System.out.println("Comparing the runtimes of Resolution and DPLL");
+
+		System.out.println("Comparing the runtimes of Resolution and DPLL");
 
 		long beforeDPLL = System.nanoTime();
 		Result result = davisPutnam(cnf);
