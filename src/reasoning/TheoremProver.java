@@ -369,8 +369,8 @@ public class TheoremProver {
 			System.out.println("Resolution: initial expression UNSATISFIABLE");
 		}
 
-		System.out.println("DPLL time: " + DPLLTime / 1000 + "ms");
-		System.out.println("Resolution time: " + resTime / 1000 + "ms");
+		System.out.println("DPLL time: " + DPLLTime / 1000 + "microseconds");
+		System.out.println("Resolution time: " + resTime / 1000 + "microseconds");
 	}
 
 }
