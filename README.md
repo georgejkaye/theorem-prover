@@ -19,7 +19,8 @@ Model:
 I(P) = T, I(Q) = T, I(A) = T, I(B) = T
 Initial expression is SATISFIABLE```
 
-
+<h2> Source code and test cases </h2>
+Source code can be found at ```src/reasoning```. There are also a number of test cases at ```src\test```. 
 
 <h2> Modes </h2>
 <h3> Clause Normal Form conversion </h3>
