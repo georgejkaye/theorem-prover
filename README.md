@@ -25,7 +25,7 @@ Initial expression is SATISFIABLE```
 <h3> Clause Normal Form conversion </h3>
 <b> Argument: </b>```-cnf``` <br>
 Converts the input expression into clause normal form. No negation occurs. The resultant clause normal form is displayed on screen. <br>
-Works by first converting the expression into conjunctive normal form recursively (using an algorithm adapted from ```https://www.cs.jhu.edu/~jason/tutorials/convert-to-CNF.html```) and then creating clauses from the series of disjunctions as one would normally do.
+Works by first converting the expression into conjunctive normal form recursively (using an algorithm adapted from https://www.cs.jhu.edu/~jason/tutorials/convert-to-CNF.html) and then creating clauses from the series of disjunctions as one would normally do.
 
 <h3> Resolution Proof </h3>
 <b> Argument:</b>```-res``` <br>
