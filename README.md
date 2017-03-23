@@ -55,6 +55,7 @@ Uses ```System.nanoTime()``` for timing, so times may be affected by background 
 ## Input formats 
 ### Simple expression
 **Argument:** ```-exp```
+
 Input is just an expression, using only the terminals listed in the grammar provided on the assignment brief. 
 
 **Example:**
