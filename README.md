@@ -1,7 +1,7 @@
 # A simple theorem prover
-This is the repository for the Reasoning Programming Assignment. Contained within this repo is a program that takes an input file containing logical expressions (which can be in a variety of different formats), and performs one of several operations on it.
+This is the repository for a Reasoning programming assignment. Contained within this repo is a program that takes an input file containing logical expressions (which can be in a variety of different formats), and performs one of several operations on it.
 
-## Using the Theorem prover
+## Using the theorem prover
 The main executable provided is ```TheoremProver.jar```. Usage is as follows: ```java -jar TheoremProver.jar <mode> <format> <file>```.
 
 ## Example of usage
