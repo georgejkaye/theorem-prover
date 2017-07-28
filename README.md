@@ -14,7 +14,8 @@ The main executable provided is ```TheoremProver.jar```. Usage is as follows: ``
 ```$ java -jar TheoremProver.jar -sat -set test.txt```
 
 **Output follows:** 
-```Input expression:
+```
+Input expression:
 {(A | B), (A -> P), (B -> Q)} : (P | Q)
 Clause Normal Form:
 {{P, Q}, {P, -A}, {A, B}, {Q, -B}}
@@ -78,11 +79,13 @@ Input is in the DIMACS file format. This input can only be used for clause norma
 
 **Example:** 
 
-```c This is in DIMACS format
+```
+c This is in DIMACS format
 p cnf 2 3
 1 2 0
 -1 0
-2 -1 0```
+2 -1 0
+```
 
 ## Additional Commands
 Debug mode can be accessed by suffixing ```-debug``` to the initial query. Debug mode prints more intermediary steps to the console to show how the procedure is getting on.
