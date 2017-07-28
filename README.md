@@ -14,7 +14,6 @@ The main executable provided is ```TheoremProver.jar```. Usage is as follows: ``
 ```$ java -jar TheoremProver.jar -sat -set test.txt```
 
 **Output follows:** 
-
 ```Input expression:
 {(A | B), (A -> P), (B -> Q)} : (P | Q)
 Clause Normal Form:
@@ -22,7 +21,8 @@ Clause Normal Form:
 Performing DPLL to find a model
 Model:
 I(P) = T, I(Q) = T, I(A) = T, I(B) = T
-Initial expression is SATISFIABLE```
+Initial expression is SATISFIABLE
+```
 
 ## Source code and test cases
 Source code can be found at ```src/reasoning```. There are also a number of test cases at ```src\test```. 
