@@ -26,7 +26,7 @@ Initial expression is SATISFIABLE
 ```
 
 ## Source code and test cases
-Source code can be found at ```src/reasoning```. There are also a number of test cases at ```src\test```. 
+Source code can be found at ```/src/reasoning```. There are also a number of test cases at ```/src/test```. 
 
 ## Modes
 ### Clause Normal Form conversion
